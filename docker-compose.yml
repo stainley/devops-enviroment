@@ -1,0 +1,61 @@
+version: '3.7'
+services:
+
+  jenkins:
+    image: jenkinsci/blueocean
+    user: root
+    volumes:
+      - ./var/run/docker.sock:/var/run/docker.sock # Expose the docker daemon in the container
+      - jenkins:/var/jenkins_home
+      - jenkins:/var/jenkins_home/.m2/repository
+    ports:
+      - "8080:8080"
+    networks:
+      - devops
+  sonarqube:
+    image: sonarqube:latest
+    user: sonarqube
+    volumes:
+      - sonarqube:/opt/sonarqube/conf
+      - sonarqube:/opt/sonarqube/data
+      - sonarqube:/opt/sonarqube/extensions
+      - sonarqube:/opt/sonarqube/logs
+    ports:
+      - "9000:9000"
+      # H2 embedded database server listening port, defaults to 9092
+      - "9092:9092"
+    networks:
+      - devops
+  nexus:
+    image: sonatype/nexus3
+    volumes:
+      - nexus3:/nexus-data sonartype/nexus3
+    ports:
+      - "8081:8081"
+    networks:
+      - devops
+  postgres:
+    image: postgres
+    env_file:
+      - database.env
+    volumes:
+      - postresql:/var/lib/postgresql/data  #Persisted data
+    ports:
+      - "5432:5432"
+    networks:
+      - devops
+
+networks:
+  devops:
+    name: devops
+    driver: bridge
+
+volumes:
+  sonarqube:
+    name: sonarqube
+  jenkins:
+    name: jenkins
+  nexus3:
+    name: nexus3
+  postresql:
+    name: postresql
